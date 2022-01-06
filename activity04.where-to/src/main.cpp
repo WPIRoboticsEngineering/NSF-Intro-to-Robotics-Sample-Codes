@@ -303,7 +303,7 @@ void loop()
 
       if(distance < 40) 
       {
-        turn(20, 10);
+        turn(20, 15);
         while(!chassis.checkMotionComplete()) {}
         drive(distance - 14, 5);
         while(!chassis.checkMotionComplete()) {}
@@ -320,7 +320,7 @@ void loop()
 void beginFreeRanging(void)
 {
   Serial.println("Searching for the free range bag!");
-  turn(180, 10);
+  turn(180, 15);
   robotState = ROBOT_FREE_RANGE;
 }
 
