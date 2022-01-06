@@ -36,8 +36,8 @@ Chassis chassis(7.0, 1440, 14.9);
 // Due to library constraints, servo MUST be connected to pin 5
 Servo32U4 servo;
 
-#define SERVO_UP 2000
-#define SERVO_DOWN 1000
+#define SERVO_UP 2300
+#define SERVO_DOWN 500
 
 // TODO, Section 5.1: Define the addtional servo positions for each of the platforms
 
@@ -57,7 +57,7 @@ void setLED(bool value)
 }
 
 // TODO, Section 5.1: Add dropping state
-enum ROBOT_STATE {ROBOT_IDLE, ROBOT_DRIVE_FOR, ROBOT_LINE_FOLLOWING, ROBOT_BAGGING};
+enum ROBOT_STATE {ROBOT_IDLE, ROBOT_DRIVE_FOR, ROBOT_LINE_FOLLOWING, ROBOT_BAGGING, ROBOT_FREE_RANGE};
 ROBOT_STATE robotState = ROBOT_IDLE;
 
 //Action handleIntersection(Delivery& del);
@@ -183,6 +183,12 @@ void handleKeyPress(int16_t keyPress)
       else if(keyPress == REWIND) beginBagging(); // Rewind is used to test bagging
 
       // TODO, Section 4.1: Handle house B
+      else if(keyPress == NUM_2) 
+      {
+        delivery.currDest = PICKUP;
+        delivery.deliveryDest = HOUSE_B;
+        beginLineFollowing();
+      }
 
       break;
       
@@ -248,6 +254,7 @@ void setup()
 
   // Attach the servo
   servo.attach();
+  servo.setMinMaxMicroseconds(SERVO_DOWN, SERVO_UP);
   servo.writeMicroseconds(SERVO_UP); 
 
   // Initialize rangefinder
@@ -289,9 +296,32 @@ void loop()
 
     // TODO, Section 5.1: Manage dropping state
 
+
+    case ROBOT_FREE_RANGE:
+      float distance = rangefinder.getDistance();
+      Serial.println(distance);
+
+      if(distance < 40) 
+      {
+        turn(20, 10);
+        while(!chassis.checkMotionComplete()) {}
+        drive(distance - 14, 5);
+        while(!chassis.checkMotionComplete()) {}
+        pickupBag();
+      }
+
+      break;
+
     default:
       break;
   }
+}
+
+void beginFreeRanging(void)
+{
+  Serial.println("Searching for the free range bag!");
+  turn(180, 10);
+  robotState = ROBOT_FREE_RANGE;
 }
 
 /**
@@ -324,7 +354,14 @@ void handleIntersection(void)
             if(delivery.currDest == PICKUP)
             {
                 delivery.currLocation = ROAD_PICKUP;
-                beginBagging();
+                float distance = rangefinder.getDistance();
+                Serial.println(distance);
+                if(distance < 30) beginBagging();
+
+                else 
+                {
+                  beginFreeRanging();
+                }
             }
 
             //TODO, Section, 4.1: Handle all other conditions with else

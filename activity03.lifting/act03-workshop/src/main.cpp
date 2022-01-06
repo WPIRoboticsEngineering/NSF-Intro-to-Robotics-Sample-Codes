@@ -25,6 +25,9 @@ Chassis chassis(7.0, 1440, 14.9);
 // Due to library constraints, servo MUST be connected to pin 5
 Servo32U4 servo;
 
+#define SERVO_UP 2300
+#define SERVO_DOWN 500
+
 // Declare rangefinder object
 Rangefinder rangefinder(11, 4);
 
@@ -41,7 +44,7 @@ void setLED(bool value)
 }
 
 // TODO, Section 6.2: Add bagging state
-enum ROBOT_STATE {ROBOT_IDLE, ROBOT_DRIVE_FOR, ROBOT_LINE_FOLLOWING};
+enum ROBOT_STATE {ROBOT_IDLE, ROBOT_DRIVE_FOR, ROBOT_LINE_FOLLOWING, ROBOT_BAGGING};
 ROBOT_STATE robotState = ROBOT_IDLE;
 
 // A helper function to stop the motors
@@ -91,6 +94,7 @@ void beginLineFollowing(void)
 void beginBagging(void)
 {
   robotState = ROBOT_BAGGING;
+  servo.writeMicroseconds(SERVO_DOWN);
   speed = 5;
 }
 
@@ -102,6 +106,10 @@ bool checkForBag(uint16_t threshold)
   bool retVal = false;
 
   // Add event logic here
+  float currDistance = rangefinder.getDistance();
+
+  if(currDistance < threshold && prevDistance >= threshold) {retVal = true;}
+  prevDistance = currDistance;
 
   return retVal;
 }
@@ -112,8 +120,10 @@ void pickupBag(void)
   Serial.print("Bagging...");
 
   // Put servo control here
+  servo.writeMicroseconds(SERVO_UP);
 
   // Don't forget to call idle()!
+  idle();
 }
 
 // Handles a key press on the IR remote
@@ -134,7 +144,7 @@ void handleKeyPress(int16_t keyPress)
       else if(keyPress == SETUP_BTN) beginLineFollowing();
 
       // TODO, Section 6.2: Handle rewind button -> initiate bag pickup
-    
+      else if(keyPress == REWIND) beginBagging();
       break;
       
     case ROBOT_LINE_FOLLOWING:
@@ -212,6 +222,7 @@ void setup()
   chassis.setMotorPIDcoeffs(5, 0.5);
 
   // Attch the servo to intermediate position
+  servo.setMinMaxMicroseconds(SERVO_DOWN, SERVO_UP);
   servo.attach();
 
   // TODO, Section 6.2: Adjust servo limits
@@ -250,8 +261,9 @@ void loop()
 
     // TODO, Section 6.2: Handle bagging state. You'll need to call handleLineFollowing()
     // as well as check for the bag to be at the correct distance
-    // case ROBOT_BAGGING:
-
+    case ROBOT_BAGGING:
+      handleLineFollowing(speed);
+      if(checkForBag(5)) pickupBag();
 
       break;
 
