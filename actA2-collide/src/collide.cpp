@@ -9,8 +9,8 @@
 Rangefinder rangefinder(11, 4);     // create instance of sonar echo pin 11, trigger pin 4
 Chassis chassis(7.0, 1440, 14.9);   // Declares a chassis object with nominal dimensions
 #define LED_PIN 13                  // LED connected to builtin pin 13
-#define red_LED 5                   // red LED on pin 5
-#define grn_LED 6                   // green LED on pin 
+#define red_LED 0                   // red LED on pin 5
+#define grn_LED 12                   // green LED on pin 
 int robotSpeed = 10;                //set robot sp6eed
 float distance;                     //sonar distance in cm
 float inches;                       //sonar distance in inches
@@ -44,8 +44,8 @@ void drive(float dist, float speed)   //helper function to drive a set distance
 {
   Serial.println("drive()");              //print drive to serial monitor
   setLED(HIGH);                           // turn on LED on pin 13
-  chassis.setWheelSpeeds(speed, speed);   //MOVES WHEELS FOREVER
-  //chassis.driveFor(dist,speed);         //MOVES FOR A CERTAIN DISTANCE
+  //chassis.setWheelSpeeds(speed, speed);   //MOVES WHEELS FOREVER
+  chassis.driveFor(dist,speed);         //MOVES FOR A CERTAIN DISTANCE
 }
 
 void turn(float ang, float speed)     //helper function to turn a set angle
@@ -55,6 +55,23 @@ void turn(float ang, float speed)     //helper function to turn a set angle
   //chassis.setWheelSpeeds(speed, speed);
   chassis.turnFor(ang,speed);
 }
+
+void driveUntilDone(float dist, float speed) // A helper function to drive a set distance
+{
+  Serial.println("drive()");
+  setLED(HIGH);
+  chassis.driveFor(dist,speed);         //MOVES FOR A CERTAIN DISTANCE
+  while(!chassis.checkMotionComplete()) {delay(1);}
+}
+
+void turnUntilDone(float ang, float speed) // A helper function to turn a set angle
+{
+  Serial.println("turn()");
+  setLED(HIGH);
+  chassis.turnFor(ang,speed);
+  while(!chassis.checkMotionComplete()) {delay(1);}
+}
+
 
 //TO DO: Modify this function to make a unique random wander routine
 //try changing the robot speed, random number seed and modulo
@@ -69,8 +86,8 @@ void randomWander(){      //function to move robot random forward and turn
   Serial.println(" deg\t");
   Serial.print(angle);
   Serial.print(" cm\t");
-  drive(distance,robotSpeed);     //only move forward to test halt behavior
-  // turn(angle,robotSpeed);      //sit still to test avoid behavior
+  if(randNumber > 0) drive(distance, robotSpeed);     //only move forward to test halt behavior
+  else turn(-randNumber % 120, 30);      //sit still to test avoid behavior
   // delay(1000);
 }
 
@@ -80,8 +97,7 @@ void Collide(){
   digitalWrite(grn_LED,LOW);
   idle();     //stop the robot
   //TO DO: add code to turn away from obstacle and continue moving
-  turn(90,5*robotSpeed);
-  delay(100);
+  turnUntilDone(90,5*robotSpeed);
 }
 
 void avoidObstacle(){
@@ -101,7 +117,7 @@ void setup()
   chassis.init();                     //initialize the chassis (which also initializes the motors)
   chassis.setMotorPIDcoeffs(5, 0.5);  //PID controller for driving robot chassis
   rangefinder.init();                 // Call init() to set up the rangefinder
-  digitalWrite(red_LED,HIGH);         //test RED LED
+  //digitalWrite(red_LED,HIGH);         //test RED LED
   digitalWrite(grn_LED,HIGH);         //test GREEN LED
   delay(5000);                        //insert delay to get robot off test stand before moving on floor
   robotState = ROBOT_WANDER;          //change robot state to random wander
@@ -115,7 +131,7 @@ void setup()
 void loop() 
 {
   readSonar();
-  delay(100);                                  //read code and sonar recharge delay
+  //delay(100);                                  //read code and sonar recharge delay
 
   if (inches<stopDistance){                    //check for osbtacles
     robotState = ROBOT_AVOID;
@@ -128,7 +144,7 @@ void loop()
        if(chassis.checkMotionComplete()) handleMotionComplete(); 
        break;
     case ROBOT_WANDER: 
-        randomWander();
+        if(chassis.checkMotionComplete()) randomWander();
         robotState = ROBOT_WANDER;
        break;
     case ROBOT_AVOID: 

@@ -46,6 +46,22 @@ void turn(float ang, float speed) // A helper function to turn a set angle
   chassis.turnFor(ang,speed);
 }
 
+void driveUntilDone(float dist, float speed) // A helper function to drive a set distance
+{
+  Serial.println("drive()");
+  setLED(HIGH);
+  chassis.driveFor(dist,speed);         //MOVES FOR A CERTAIN DISTANCE
+  while(!chassis.checkMotionComplete()) {delay(1);}
+}
+
+void turnUntilDone(float ang, float speed) // A helper function to turn a set angle
+{
+  Serial.println("turn()");
+  setLED(HIGH);
+  chassis.turnFor(ang,speed);
+  while(!chassis.checkMotionComplete()) {delay(1);}
+}
+
 //TO DO: Modify this function to make a unique random wander routine
 //try changing the random number seed and modulo
 void randomWander(){      //function to move robot random forward and turn
@@ -57,10 +73,8 @@ void randomWander(){      //function to move robot random forward and turn
   Serial.println(" deg\t");
   Serial.print(angle);
   Serial.print(" cm\t");
-  drive(distance,robotSpeed);
-  delay(1000);
-  turn(angle,robotSpeed);
-  delay(1000);
+  driveUntilDone(distance,robotSpeed);
+  turnUntilDone(angle,robotSpeed);
 }
 
 // Used to check if the motions above are complete
