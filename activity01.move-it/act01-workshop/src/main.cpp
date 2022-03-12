@@ -13,7 +13,7 @@
 Chassis chassis(7.0, 1440, 14.9);
 
 // Setup the IR receiver/decoder object
-const uint8_t IR_DETECTOR_PIN = 14;
+const uint8_t IR_DETECTOR_PIN = 1;
 IRDecoder decoder(IR_DETECTOR_PIN);
 
 // Helper function for debugging
@@ -49,7 +49,7 @@ void drive(float dist, float speed)
   robotState = ROBOT_DRIVE_FOR;
 
   // TODO: In Section 6.1, remove the call to setWheelSpeeds() and add a call to chassis.driveFor()
-  chassis.setWheelSpeeds(100, 100);
+  chassis.setTwist(speed, 0);
 }
 
 // A helper function to turn a set angle
@@ -107,7 +107,6 @@ void setup()
 
   // initialize the IR decoder
   decoder.init();
-
 
   Serial.println("/setup()");
 }
