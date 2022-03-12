@@ -4,18 +4,16 @@
 
 #include <Arduino.h>
 #include <wpi-32u4-lib.h>
-
+#include <Chassis.h>
 #include <IRdecoder.h>
 #include <ir_codes.h>
-
-#include <Chassis.h>
 
 // Declares a chassis object with nominal dimensions
 // TODO, Section 6.2: Adjust the parameters: wheel diam, encoder counts, wheel track
 Chassis chassis(7.0, 1440, 14.9);
 
 // Setup the IR receiver/decoder object
-const uint8_t IR_DETECTOR_PIN = 1;
+const uint8_t IR_DETECTOR_PIN = 14;
 IRDecoder decoder(IR_DETECTOR_PIN);
 
 // Helper function for debugging
@@ -51,7 +49,7 @@ void drive(float dist, float speed)
   robotState = ROBOT_DRIVE_FOR;
 
   // TODO: In Section 6.1, remove the call to setWheelSpeeds() and add a call to chassis.driveFor()
-  chassis.setWheelSpeeds(10, 10);
+  chassis.setWheelSpeeds(100, 100);
 }
 
 // A helper function to turn a set angle
